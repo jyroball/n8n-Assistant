@@ -9,7 +9,7 @@
       "typeVersion": 1.1,
       "position": [
         380,
-        -320
+        -340
       ],
       "id": "8504a838-61a5-4648-8ec1-c1a77e8f16bf",
       "name": "When chat message received",
@@ -62,8 +62,8 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -740,
-        -140
+        700,
+        -400
       ],
       "id": "4954f488-45d0-44d9-ac4e-3eaef4cf6ff7",
       "name": "When clicking ‘Execute workflow’"
@@ -87,8 +87,8 @@
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1,
       "position": [
-        -500,
-        -140
+        940,
+        -400
       ],
       "id": "29beceeb-0852-4849-a2a7-844308589a50",
       "name": "Read/Write Files from Disk1"
@@ -102,8 +102,8 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
       "position": [
-        -280,
-        -140
+        1160,
+        -400
       ],
       "id": "3189501a-8767-46a6-bb18-b92afdf599fc",
       "name": "Transcribe a recording",
@@ -173,8 +173,8 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -740,
-        -320
+        700,
+        -580
       ],
       "typeVersion": 1,
       "id": "70a078d2-4182-49e5-a9dc-beff5ccd2b99",
@@ -186,16 +186,180 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -440,
-        -320
+        1000,
+        -580
       ],
       "typeVersion": 1,
       "id": "4ca408b9-2aae-4466-a33b-2f706a1afdc6",
       "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "path": "fc6b4687-9b17-4ad6-a150-b285a4551458",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        -100
+      ],
+      "id": "8570df84-80e7-44eb-a59e-7fdf6cc539c1",
+      "name": "Webhook",
+      "webhookId": "fc6b4687-9b17-4ad6-a150-b285a4551458"
+    },
+    {
+      "parameters": {
+        "content": "## Get data from html front end\n**isVoice** - then need to transcribe voice to text then pass.\n**isText** - no need to transcribe just need to pass text into llm workflow.",
+        "height": 200
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -100,
+        -320
+      ],
+      "typeVersion": 1,
+      "id": "651e0869-2cb7-48ae-89e5-763454da9356",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        320,
+        -20
+      ],
+      "id": "32c70720-76bc-49f6-876c-a435dd6cb34b",
+      "name": "Transcribe a recording1",
+      "credentials": {
+        "openAiApi": {
+          "id": "GWUIKuj4E1HrklGh",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "5d3564d3-ee8f-4751-b4d6-bd08304c0456"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "86ef848f-86b7-49d7-b7bd-394b9d794742",
+                    "leftValue": "",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        60,
+        -100
+      ],
+      "id": "d8b83f25-03ac-4837-be79-c58e0218b803",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "content": "## Transcribe note\nmight need extra steps when getting audio file when transcribing."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        140,
+        140
+      ],
+      "typeVersion": 1,
+      "id": "5e05ceb2-f474-44d1-b6f5-c29d56259151",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1480,
+        -120
+      ],
+      "id": "ab6ce63d-cf51-4f1c-96a7-c6c58c88917f",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "content": "## What to do after\nSend back conversation with LLM into web application to continue conversation there.",
+        "height": 120
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1420,
+        -260
+      ],
+      "typeVersion": 1,
+      "id": "6c706ceb-c814-4fbe-b9e7-7c63896b5952",
+      "name": "Sticky Note5"
     }
   ],
   "pinData": {
     "Transcribe a recording": [
+      {
+        "json": {
+          "chatInput": "Can you tell me what this document that I uploaded is, and can you tell me what I can do with it?",
+          "sessionId": "3d555d6f478a43f8949491171b38d08e",
+          "usage": {
+            "type": "duration",
+            "seconds": 6
+          }
+        }
+      }
+    ],
+    "Transcribe a recording1": [
       {
         "json": {
           "chatInput": "Can you tell me what this document that I uploaded is, and can you tell me what I can do with it?",
@@ -286,6 +450,57 @@
           {
             "node": "AI Agent",
             "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Transcribe a recording1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
             "index": 0
           }
         ]
