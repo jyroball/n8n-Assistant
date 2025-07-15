@@ -1,0 +1,97 @@
+{
+  "name": "Load-Document-Nodes",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "=data",
+        "options": {
+          "joinPages": false
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        80,
+        0
+      ],
+      "id": "83a18381-3770-4cb8-954a-d0780dc54d84",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "fileSelector": "=D:/GitHub/Document_Parser/example/sample.pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -120,
+        0
+      ],
+      "id": "46aea845-8cda-48c7-a76d-e1038139e5b0",
+      "name": "Read/Write Files from Disk",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        0
+      ],
+      "id": "f873c074-ae2e-41fa-b086-dfc2243be23c",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "content": "## Doc Loader\nSimple Document loader, not optimized yet. Can use llama parser script to have better document to pass into RAG for LLM to use later on. This should be fine for simple proof of concept.",
+        "height": 200
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -160,
+        -240
+      ],
+      "typeVersion": 1,
+      "id": "ec3f7455-fe71-47a5-b5bd-a0a6abec0bcf",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "71af7423-a506-41d8-b980-536901795886",
+  "meta": {
+    "instanceId": "5b7888eec1ec6de9e04cf6635e0f4e3d148f28c6c65a4151d8320e874dedfc4b"
+  },
+  "id": "tr2dNyZXhZejac4W",
+  "tags": []
+}
