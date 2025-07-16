@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chatbot</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 2em; }
+    #response { margin-top: 1em; padding: 1em; background: #f0f0f0; border-radius: 6px; }
+    #status { font-size: 0.9em; color: gray; }
+    button { margin-right: 1em; }
+  </style>
+</head>
+<body>
+  <h2>Chatbot</h2>
+
+  <input type="text" id="userInput" placeholder="Type your question..." style="width: 80%;">
+  <button onclick="sendText()">Send</button>
+  <button onclick="startRecording()">Record Voice</button>
+  <button onclick="stopRecording()" id="stopBtn" disabled>Stop</button>
+  <div id="status"></div>
+
+  <div id="response"><strong>AI:</strong> <span id="aiResponse">Waiting...</span></div>
+
+  <script>
+    const webhook = 'http://localhost:5678/webhook-test/fc6b4687-9b17-4ad6-a150-b285a4551458';
+
+    async function sendToN8N(prompt) {
+      document.getElementById("status").textContent = "Thinking...";
+      const res = await fetch(webhook, {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+      const data = await res.json();
+      document.getElementById("aiResponse").textContent = data.reply || "(No response)";
+      document.getElementById("status").textContent = "";
+    }
+
+    function sendText() {
+      const input = document.getElementById("userInput").value;
+      if (input.trim()) {
+        sendToN8N(input.trim());
+        document.getElementById("userInput").value = "";
+      }
+    }
+
+    let mediaRecorder;
+    let audioChunks = [];
+
+    async function startRecording() {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        const formData = new FormData();
+        formData.append('file', audioBlob, 'speech.webm');
+
+        document.getElementById("status").textContent = "Sending audio...";
+
+        const res = await fetch(webhook, {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+        document.getElementById("aiResponse").textContent = data.transcript || data.reply || "(No response)";
+        document.getElementById("status").textContent = "";
+      };
+
+      mediaRecorder.start();
+      document.getElementById("status").textContent = "Recording...";
+      document.getElementById("stopBtn").disabled = false;
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+        document.getElementById("stopBtn").disabled = true;
+        document.getElementById("status").textContent = "Processing...";
+      }
+    }
+  </script>
+</body>
+</html>
