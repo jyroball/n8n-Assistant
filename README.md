@@ -1,2 +1,3 @@
 # n8n-Assistant
-Document assistant using n8n.
+
+Conversational Asistant using some frontend with n8n backend workflow.

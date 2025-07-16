@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Voice Assistant</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 2em; }
+    #status { font-size: 0.9em; color: gray; margin-top: 1em; }
+    #aiResponse { margin-top: 1em; background: #f0f0f0; padding: 1em; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <h2>AI Voice Assistant</h2>
+  <button onclick="startConversation()" id="startBtn">Start Talking</button>
+  <div id="status">Click to start conversation.</div>
+  <div id="aiResponse"></div>
+
+  <script>
+    const webhookURL = 'http://localhost:5678/webhook/fc6b4687-9b17-4ad6-a150-b285a4551458';
+    let mediaRecorder;
+    let audioChunks = [];
+    let isActive = false;
+
+    async function startConversation() {
+      if (isActive) return;
+      isActive = true;
+      document.getElementById("status").textContent = "Starting assistant...";
+      await loopVoiceChat();
+    }
+
+    async function loopVoiceChat() {
+      while (isActive) {
+        document.getElementById("status").textContent = "Listening...";
+
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+
+        const audioBlob = await new Promise(resolve => {
+          mediaRecorder.onstop = () => resolve(new Blob(audioChunks, { type: 'audio/webm' }));
+          mediaRecorder.start();
+
+          setTimeout(() => {
+            mediaRecorder.stop();
+          }, 5000);
+        });
+
+        document.getElementById("status").textContent = "Sending to AI...";
+
+        const formData = new FormData();
+        formData.append('file', audioBlob, 'speech.webm');
+
+        try {
+          const res = await fetch(webhookURL, {
+            method: 'POST',
+            body: formData
+          });
+          const data = await res.json();
+          const reply = data.reply || "(No response)";
+          document.getElementById("aiResponse").textContent = reply;
+          document.getElementById("status").textContent = "Speaking...";
+        } catch (err) {
+          console.error(err);
+          document.getElementById("status").textContent = "Error during AI call.";
+          break;
+        }
+
+        await wait(1000); // Wait before next round
+      }
+    }
+
+    function wait(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+  </script>
+</body>
+</html>
