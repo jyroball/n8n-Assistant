@@ -2,86 +2,77 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Chatbot</title>
+  <title>Voice Assistant</title>
   <style>
     body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 2em; }
-    #response { margin-top: 1em; padding: 1em; background: #f0f0f0; border-radius: 6px; }
-    #status { font-size: 0.9em; color: gray; }
-    button { margin-right: 1em; }
+    #status { font-size: 0.9em; color: gray; margin-top: 1em; }
+    #aiResponse { margin-top: 1em; background: #f0f0f0; padding: 1em; border-radius: 6px; }
   </style>
 </head>
 <body>
-  <h2>Chatbot</h2>
-
-  <input type="text" id="userInput" placeholder="Type your question..." style="width: 80%;">
-  <button onclick="sendText()">Send</button>
-  <button onclick="startRecording()">Record Voice</button>
-  <button onclick="stopRecording()" id="stopBtn" disabled>Stop</button>
-  <div id="status"></div>
-
-  <div id="response"><strong>AI:</strong> <span id="aiResponse">Waiting...</span></div>
+  <h2>AI Voice Assistant</h2>
+  <button onclick="startConversation()" id="startBtn">Start Talking</button>
+  <div id="status">Click to start conversation.</div>
+  <div id="aiResponse"></div>
 
   <script>
-    const webhook = 'http://localhost:5678/webhook-test/fc6b4687-9b17-4ad6-a150-b285a4551458';
-
-    async function sendToN8N(prompt) {
-      document.getElementById("status").textContent = "Thinking...";
-      const res = await fetch(webhook, {
-        method: "POST",
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt })
-      });
-      const data = await res.json();
-      document.getElementById("aiResponse").textContent = data.reply || "(No response)";
-      document.getElementById("status").textContent = "";
-    }
-
-    function sendText() {
-      const input = document.getElementById("userInput").value;
-      if (input.trim()) {
-        sendToN8N(input.trim());
-        document.getElementById("userInput").value = "";
-      }
-    }
-
+    const webhookURL = 'http://localhost:5678/webhook-test/fc6b4687-9b17-4ad6-a150-b285a4551458';
     let mediaRecorder;
     let audioChunks = [];
+    let isActive = false;
 
-    async function startRecording() {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder = new MediaRecorder(stream);
-      audioChunks = [];
+    async function startConversation() {
+      if (isActive) return;
+      isActive = true;
+      document.getElementById("status").textContent = "Starting assistant...";
+      await loopVoiceChat();
+    }
 
-      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    async function loopVoiceChat() {
+      while (isActive) {
+        document.getElementById("status").textContent = "Listening...";
 
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+
+        const audioBlob = await new Promise(resolve => {
+          mediaRecorder.onstop = () => resolve(new Blob(audioChunks, { type: 'audio/webm' }));
+          mediaRecorder.start();
+
+          setTimeout(() => {
+            mediaRecorder.stop();
+          }, 5000);
+        });
+
+        document.getElementById("status").textContent = "Sending to AI...";
+
         const formData = new FormData();
         formData.append('file', audioBlob, 'speech.webm');
 
-        document.getElementById("status").textContent = "Sending audio...";
+        try {
+          const res = await fetch(webhookURL, {
+            method: 'POST',
+            body: formData
+          });
+          const data = await res.json();
+          const reply = data.reply || "(No response)";
+          document.getElementById("aiResponse").textContent = reply;
+          document.getElementById("status").textContent = "Speaking...";
+        } catch (err) {
+          console.error(err);
+          document.getElementById("status").textContent = "Error during AI call.";
+          break;
+        }
 
-        const res = await fetch(webhook, {
-          method: 'POST',
-          body: formData
-        });
-
-        const data = await res.json();
-        document.getElementById("aiResponse").textContent = data.transcript || data.reply || "(No response)";
-        document.getElementById("status").textContent = "";
-      };
-
-      mediaRecorder.start();
-      document.getElementById("status").textContent = "Recording...";
-      document.getElementById("stopBtn").disabled = false;
+        await wait(1000); // Wait before next round
+      }
     }
 
-    function stopRecording() {
-      if (mediaRecorder && mediaRecorder.state !== "inactive") {
-        mediaRecorder.stop();
-        document.getElementById("stopBtn").disabled = true;
-        document.getElementById("status").textContent = "Processing...";
-      }
+    function wait(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
     }
   </script>
 </body>
