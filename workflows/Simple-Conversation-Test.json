@@ -4,9 +4,9 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=User prompt: {{ $json.chatInput }}",
+        "text": "=User prompt: {{ $json.chatInput || $json.text}}",
         "options": {
-          "systemMessage": "=#Role\nYou are a conversational chat bot that is an expert at using your external tools to answer the user's qeustions.\n\n#Behavior\nYou should assist the user with any question they have with their daily tasks. You are to be as helpful as you can, while giving the most welcoming replies to the user.\n\n#Response\nYour response should be in a welcoming tone that answers the user's questions accurately. Leverage your external tools to increase the accuracy of your responses.\n\n#Tools\nYou are given a calculator, weather api, and date and time api to learn the current environment.\n\n##calculator\nOnly use this tool if arithmetic is involved to help you answer basic math questions.\n\n##date and time\nOnly use this if the user asks for a specific time or if the user asks what time it is right now.\n\n##weatherApi\nOnly use this when the user asks for the current weather conditions. Reply only with minimal information such as temperature and if it will be rainy, sunny, cloudy, etc."
+          "systemMessage": "=#Role\nYou are a conversational chat bot that is an expert at using your external tools to answer the user's qeustions.\n\n#Behavior\nYou should assist the user with any question they have with their daily tasks. You are to be as helpful as you can, while giving the most welcoming replies to the user.\n\n#Response\n- Your response should be in a welcoming tone that answers the user's questions accurately. \n- Leverage your external tools to increase the accuracy of your responses.\n- Your output should be readable in json, so do not use any special characters that may interfere when converting a string to JSON.\n- When outputing math do not use symbols used in LaTex, just use words and numbers.\n\n#Tools\nYou are given a calculator, weather api, and date and time api to learn the current environment.\n\n##calculator\nOnly use this tool if arithmetic is involved to help you answer basic math questions.\n\n##date and time\nOnly use this if the user asks for a specific time or if the user asks what time it is right now.\n\n##weatherApi\nOnly use this when the user asks for the current weather conditions. Reply only with minimal information such as temperature and if it will be rainy, sunny, cloudy, etc."
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
@@ -102,6 +102,8 @@
     },
     {
       "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": " 59233e761de7420e8975c4b2feda143d",
         "contextWindowLength": 10
       },
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
@@ -214,27 +216,6 @@
     },
     {
       "parameters": {
-        "resource": "audio",
-        "operation": "transcribe",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.openAi",
-      "typeVersion": 1.8,
-      "position": [
-        460,
-        20
-      ],
-      "id": "32c70720-76bc-49f6-876c-a435dd6cb34b",
-      "name": "Transcribe a recording1",
-      "credentials": {
-        "openAiApi": {
-          "id": "GWUIKuj4E1HrklGh",
-          "name": "OpenAi account"
-        }
-      }
-    },
-    {
-      "parameters": {
         "content": "## Transcribe note\nmight need extra steps when getting audio file when transcribing."
       },
       "type": "n8n-nodes-base.stickyNote",
@@ -249,7 +230,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={\n  \"transcript\": {{ $('Transcribe a recording1').item.json.chatInput }},\n  \"reply\": {{ $json.output }}\n}",
+        "responseBody": "={\n  \"transcript\": {{ JSON.stringify($json.chatInput || \"\") }},\n  \"reply\": {{ JSON.stringify($json.output || \"\") }}\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.respondToWebhook",
@@ -399,22 +380,62 @@
       "typeVersion": 1,
       "id": "626d5e25-974e-43c7-b104-9ba01521cf69",
       "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        -200
+      ],
+      "id": "aed9807b-08f4-4520-98b9-962defda7646",
+      "name": "When chat message received",
+      "webhookId": "669960eb-7922-4f93-8551-d6565bcc0f70"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "binaryPropertyName": "=data0",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        440,
+        20
+      ],
+      "id": "017d19e2-1681-4e75-a43b-134d33f28c0d",
+      "name": "Transcribe a recording1",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "GWUIKuj4E1HrklGh",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        700,
+        -80
+      ],
+      "id": "15d22862-831d-44c4-9f62-46072029a872",
+      "name": "Merge",
+      "alwaysOutputData": true
     }
   ],
   "pinData": {
     "Transcribe a recording": [
-      {
-        "json": {
-          "chatInput": "Can you tell me what this document that I uploaded is, and can you tell me what I can do with it?",
-          "sessionId": "3d555d6f478a43f8949491171b38d08e",
-          "usage": {
-            "type": "duration",
-            "seconds": 6
-          }
-        }
-      }
-    ],
-    "Transcribe a recording1": [
       {
         "json": {
           "chatInput": "Can you tell me what this document that I uploaded is, and can you tell me what I can do with it?",
@@ -504,17 +525,6 @@
         ]
       ]
     },
-    "Transcribe a recording1": {
-      "main": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "AI Agent": {
       "main": [
         [
@@ -530,9 +540,9 @@
       "main": [
         [
           {
-            "node": "AI Agent",
+            "node": "Merge",
             "type": "main",
-            "index": 0
+            "index": 1
           }
         ],
         [
@@ -570,13 +580,46 @@
           }
         ]
       ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "8e9a32d5-2d4a-4b2b-b8d0-41909ccbad14",
+  "versionId": "0bc86f53-0713-4afe-9c59-edd132af8fbc",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "5b7888eec1ec6de9e04cf6635e0f4e3d148f28c6c65a4151d8320e874dedfc4b"
